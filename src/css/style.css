@@ -1454,9 +1454,35 @@ body.light-mode .dropzone {
     display: inline-block;
   }
   
-  /* Restored default layout scrolling */
+  /* Native Mobile Scrolling & Pull-to-Refresh Support */
+  #grid-canvas, .scanlines {
+    position: fixed !important;
+  }
+  
+  html, body.command-center {
+    height: auto !important;
+    min-height: 100vh;
+    overflow: visible !important;
+  }
+  
+  .app-layout {
+    height: auto !important;
+    min-height: 100vh;
+    overflow: visible !important;
+    display: block !important;
+  }
+  
+  .main-content {
+    height: auto !important;
+    min-height: 100vh;
+    overflow: visible !important;
+    display: block !important;
+  }
 
   .top-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
     justify-content: space-between;
     padding: 0.75rem 1.5rem;
   }
