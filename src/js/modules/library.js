@@ -575,11 +575,10 @@ function getLinkThumbnailHTML(url) {
         </div>
       `;
     } else {
-      const encodedUrl = encodeURIComponent(url);
       const domain = urlObj.hostname;
       return `
-        <div class="link-thumbnail-container" style="background-color: var(--bg-surface);">
-          <img class="link-thumbnail-img" src="https://v1.opengraph.11ty.dev/${encodedUrl}/medium/" alt="Thumbnail" onerror="this.src='https://unavatar.io/${domain}'; this.onerror=null;">
+        <div class="link-thumbnail-container" style="background-color: #111;">
+          <img class="link-logo-img" src="https://unavatar.io/${domain}?fallback=false" alt="Logo" onerror="this.src='https://www.google.com/s2/favicons?domain=${domain}&sz=128'; this.onerror=null;">
         </div>
       `;
     }
