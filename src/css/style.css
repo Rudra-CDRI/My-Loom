@@ -1682,6 +1682,10 @@ body.light-mode .dropzone {
     gap: 1.25rem;
   }
   
+  .dashboard-right-column {
+    order: -1;
+  }
+  
   .dashboard-grid {
     gap: 1.25rem;
   }

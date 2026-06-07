@@ -25,20 +25,19 @@ export const DashboardView = {
       </header>
 
       <!-- Row 1: Quick Actions (Full width) -->
-      <section class="widget" id="widget-quick-actions" style="margin-bottom: 24px;">
-        <h2 class="widget-title">Quick Actions</h2>
-        <div class="widget-content" style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; padding: 1.5rem;">
-          <button class="btn btn-primary" id="btn-quick-task">✚ Create Task</button>
-          <button class="btn btn-primary" id="btn-quick-intern">✚ Log Internship</button>
-          <button class="btn btn-primary" id="btn-quick-link">✚ Save Link</button>
-          <button class="btn btn-primary" id="btn-quick-doc">✚ Upload Document</button>
+      <section class="widget" id="widget-quick-actions" style="margin-bottom: 16px;">
+        <div class="widget-content" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; padding: 0.75rem;">
+          <button class="btn btn-primary" id="btn-quick-task" style="padding: 0.4rem 1rem; font-size: 0.85rem;">✚ Create Task</button>
+          <button class="btn btn-primary" id="btn-quick-intern" style="padding: 0.4rem 1rem; font-size: 0.85rem;">✚ Log Internship</button>
+          <button class="btn btn-primary" id="btn-quick-link" style="padding: 0.4rem 1rem; font-size: 0.85rem;">✚ Save Link</button>
+          <button class="btn btn-primary" id="btn-quick-doc" style="padding: 0.4rem 1rem; font-size: 0.85rem;">✚ Upload Document</button>
         </div>
       </section>
 
       <!-- Bento Grid (2fr Left Column, 1fr Right Column) -->
       <div class="dashboard-bento-grid">
         <!-- Left Column (2fr) -->
-        <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div class="dashboard-left-column" style="display: flex; flex-direction: column; gap: 24px;">
           <!-- Immediate Focus Widget -->
           <section class="widget focus-widget" id="widget-focus">
             <h2 class="widget-title">Immediate Focus</h2>
@@ -71,7 +70,7 @@ export const DashboardView = {
         </div>
 
         <!-- Right Column (1fr) -->
-        <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div class="dashboard-right-column" style="display: flex; flex-direction: column; gap: 24px;">
           <!-- Operations Calendar Widget -->
           <section class="widget calendar-widget" id="widget-calendar">
             <h2 class="widget-title">Operations Calendar</h2>
