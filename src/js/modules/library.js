@@ -584,11 +584,11 @@ function getLinkThumbnailHTML(url) {
         </div>
       `;
     } else {
-      // 3. Generic Links: Full website screenshot via WordPress mshots
+      // 3. Generic Links: Extract site's OG image via Microlink, fallback to screenshot
       const encodedUrl = encodeURIComponent(url);
       return `
         <div class="link-thumbnail-container">
-          <img class="link-thumbnail-img" src="https://s.wordpress.com/mshots/v1/${encodedUrl}?w=600" alt="Site Preview">
+          <img class="link-thumbnail-img" src="https://api.microlink.io/?url=${encodedUrl}&embed=image.url" alt="Thumbnail" onerror="this.onerror=null; this.src='https://s.wordpress.com/mshots/v1/${encodedUrl}?w=600';">
         </div>
       `;
     }
