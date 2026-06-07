@@ -6,11 +6,20 @@
   <title>My Loom</title>
   <meta name="description" content="My Loom - A high-fidelity industrial technical command center style personal productivity workspace.">
   
+  <!-- PWA & Mobile Web App Tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b0b0b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="My Loom">
+  
   <!-- Typography: Space Grotesk for fluid high-legibility UI, JetBrains Mono for monospace dates/tags/terminal -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/jpeg" href="favicon.jpg">
+  <link rel="apple-touch-icon" href="favicon.jpg">
   
   <!-- CSS Stylesheet -->
   <link rel="stylesheet" href="src/css/style.css">
@@ -273,5 +282,15 @@
 
   <!-- App Script Entry Hook -->
   <script type="module" src="src/js/app.js"></script>
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => {
+          console.warn('Service Worker registration failed:', err);
+        });
+      });
+    }
+  </script>
 </body>
 </html>
