@@ -1196,6 +1196,110 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
 
+/* -------------------------------------------------------------
+   VIEW MODES FOR CARDS GRID
+   ------------------------------------------------------------- */
+/* Compact Grid */
+.cards-grid.view-mode-compact {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+.cards-grid.view-mode-compact .card {
+  padding: 1.25rem;
+  border-radius: 16px;
+}
+.cards-grid.view-mode-compact .card-thumbnail {
+  height: 100px;
+  margin-bottom: 1rem;
+}
+.cards-grid.view-mode-compact .card-title {
+  font-size: 0.95rem;
+}
+.cards-grid.view-mode-compact .card-body {
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+}
+.cards-grid.view-mode-compact .card-footer {
+  padding-top: 0.75rem;
+}
+
+/* List View */
+.cards-grid.view-mode-list {
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+.cards-grid.view-mode-list .card {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas: 
+    "thumb header"
+    "thumb body"
+    "thumb footer";
+  gap: 0 1.5rem;
+  padding: 1.25rem;
+  align-items: start;
+}
+.cards-grid.view-mode-list .card-thumbnail {
+  grid-area: thumb;
+  height: 100%;
+  min-height: 100px;
+  margin-bottom: 0;
+}
+.cards-grid.view-mode-list .card-header { grid-area: header; margin-bottom: 0.5rem; }
+.cards-grid.view-mode-list .card-body { 
+  grid-area: body; 
+  margin-bottom: 0.5rem; 
+  flex-direction: row; 
+  align-items: center; 
+  gap: 1.5rem; 
+}
+.cards-grid.view-mode-list .card-body > div { margin-bottom: 0 !important; }
+.cards-grid.view-mode-list .btn-visit-library { width: auto; margin-top: 0; padding: 0.4rem 1.2rem; }
+.cards-grid.view-mode-list .card-footer { grid-area: footer; border-top: none; padding-top: 0; justify-content: flex-start; }
+
+/* Minimal List View */
+.cards-grid.view-mode-minimal {
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+.cards-grid.view-mode-minimal .card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  gap: 1.5rem;
+  border-radius: 12px;
+}
+.cards-grid.view-mode-minimal .card-thumbnail {
+  display: none;
+}
+.cards-grid.view-mode-minimal .card-header {
+  margin-bottom: 0;
+  flex: 1;
+}
+.cards-grid.view-mode-minimal .card-body {
+  margin-bottom: 0;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+  flex: none;
+}
+.cards-grid.view-mode-minimal .card-body > div {
+  margin-bottom: 0 !important;
+}
+.cards-grid.view-mode-minimal .btn-visit-library {
+  width: auto;
+  margin-top: 0;
+  padding: 0.3rem 1rem;
+}
+.cards-grid.view-mode-minimal .card-footer {
+  border-top: none;
+  padding-top: 0;
+  flex: none;
+}
+
+
 .card-header {
   display: flex;
   justify-content: space-between;

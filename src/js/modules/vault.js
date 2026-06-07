@@ -10,6 +10,7 @@ let storeUnsubscribe = null;
 let containerRef = null;
 let activeTagFilter = 'ALL';
 let activeFolderId = 'root';
+let currentVaultViewMode = localStorage.getItem('myloom_vault_view') || 'table';
 
 // Track active Object URLs to revoke them when closing the modal
 let activeObjectUrl = null;
@@ -45,6 +46,12 @@ export const VaultView = {
           <input type="text" id="vault-search" class="form-control search-input" placeholder="Search filenames...">
           <button class="btn" id="btn-add-folder">+ Folder</button>
         </div>
+        <div class="actions-group view-toggles" style="background: rgba(0,0,0,0.2); padding: 0.2rem; border-radius: 8px; border: 1px solid var(--border-color); margin: 0 1rem;">
+          <button class="btn btn-icon vault-view-toggle-btn ${currentVaultViewMode === 'table' ? 'active' : ''}" data-view="table" title="Table View" style="padding: 0.3rem 0.5rem; border-radius: 6px;">☰</button>
+          <button class="btn btn-icon vault-view-toggle-btn ${currentVaultViewMode === 'grid' ? 'active' : ''}" data-view="grid" title="Grid View" style="padding: 0.3rem 0.5rem; border-radius: 6px;">⊞</button>
+          <button class="btn btn-icon vault-view-toggle-btn ${currentVaultViewMode === 'compact' ? 'active' : ''}" data-view="compact" title="Compact Grid" style="padding: 0.3rem 0.5rem; border-radius: 6px;">⊟</button>
+          <button class="btn btn-icon vault-view-toggle-btn ${currentVaultViewMode === 'minimal' ? 'active' : ''}" data-view="minimal" title="Minimal List" style="padding: 0.3rem 0.5rem; border-radius: 6px;">≡</button>
+        </div>
         <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">
           Filter tag: <span id="current-tag-indicator" class="tag">ALL</span>
         </div>
@@ -58,24 +65,8 @@ export const VaultView = {
       <!-- Document Log Table -->
       <div class="widget">
         <h2 class="widget-title">Vault Catalog</h2>
-        <div class="widget-content">
-          <div class="table-container">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th style="width: 50px; text-align: center;">Type</th>
-                  <th>File Name</th>
-                  <th style="width: 120px;">File Size</th>
-                  <th class="col-date" style="width: 130px;">Ingest Date</th>
-                  <th>Metadata Tags</th>
-                  <th style="width: 130px; text-align: right;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="vault-table-body">
-                <!-- Dynamically populated files -->
-              </tbody>
-            </table>
-          </div>
+        <div class="widget-content" id="vault-catalog-container" style="padding-top: 1rem;">
+          <!-- Dynamically populated based on view mode -->
         </div>
       </div>
 
@@ -209,6 +200,19 @@ function bindEvents() {
       renderVaultList(searchInput.value, activeTagFilter);
     });
   }
+
+  // View Mode Toggles
+  document.querySelectorAll('.vault-view-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const mode = e.currentTarget.getAttribute('data-view');
+      currentVaultViewMode = mode;
+      localStorage.setItem('myloom_vault_view', mode);
+      document.querySelectorAll('.vault-view-toggle-btn').forEach(b => b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      const searchVal = document.getElementById('vault-search')?.value || '';
+      renderVaultList(searchVal, activeTagFilter);
+    });
+  });
 
   // Clicking dropzone opens file picker
   if (dropzone) {
@@ -493,10 +497,18 @@ function renderTagsCloud() {
   });
 }
 
+function getDocIcon(type) {
+  if (type === 'pdf') return '<span style="color: var(--accent); font-size: 1.25em; font-weight: bold;" title="Terracotta PDF">📄</span>';
+  if (['png', 'jpg', 'jpeg', 'svg', 'gif'].includes(type)) return '🖼';
+  if (['zip', 'rar', 'tar', 'gz'].includes(type)) return '🗀';
+  if (['txt', 'md', 'json', 'csv'].includes(type)) return '🖺';
+  return '🗋';
+}
+
 function renderVaultList(searchQuery = '', filterTag = 'ALL') {
   if (!containerRef) return;
-  const tableBody = document.getElementById('vault-table-body');
-  if (!tableBody) return;
+  const container = document.getElementById('vault-catalog-container');
+  if (!container) return;
 
   let docs = getDocumentsByFolder(activeFolderId);
 
@@ -512,79 +524,120 @@ function renderVaultList(searchQuery = '', filterTag = 'ALL') {
   }
 
   if (docs.length === 0) {
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
-          No files in this directory.
-        </td>
-      </tr>
+    container.innerHTML = `
+      <div style="text-align: center; padding: 2.5rem; color: var(--text-muted); border: 1px dashed var(--border-color); border-radius: 12px;">
+        No files in this directory matching the criteria.
+      </div>
     `;
     return;
   }
 
-  tableBody.innerHTML = docs.map(doc => {
-    const sizeString = formatBytes(doc.size);
-    const dateString = new Date(doc.uploadDate).toLocaleDateString();
-    
-    // Stylized PDF terracotta icon versus others
-    let icon = '🗋';
-    if (doc.type === 'pdf') {
-      icon = '<span style="color: var(--accent); font-size: 1.25rem; font-weight: bold;" title="Terracotta PDF">📄</span>';
-    } else if (['png', 'jpg', 'jpeg', 'svg', 'gif'].includes(doc.type)) {
-      icon = '🖼';
-    } else if (['zip', 'rar', 'tar', 'gz'].includes(doc.type)) {
-      icon = '🗀';
-    } else if (['txt', 'md', 'json', 'csv'].includes(doc.type)) {
-      icon = '🖺';
-    }
-
-    return `
-      <tr>
-        <td style="font-size: 1.25rem; text-align: center;">${icon}</td>
-        <td>
-          <span class="vault-filename-link" data-id="${doc.id}" style="font-weight: 700; color: var(--text-primary); cursor: pointer;" title="Open in themed viewer">
-            ${escapeHTML(doc.name)}
-          </span>
-        </td>
-        <td>${sizeString}</td>
-        <td class="monospace" style="font-size: 0.85rem;">${dateString}</td>
-        <td>
-          ${doc.tags.map(t => `<span class="tag">${escapeHTML(t)}</span>`).join(' ')}
-        </td>
-        <td style="text-align: right;">
-          <button class="btn btn-icon btn-view-file" data-id="${doc.id}" title="Open Viewer">👁</button>
-          <button class="btn btn-icon btn-delete-file" data-id="${doc.id}" style="color: var(--danger); border-color: rgba(239,68,68,0.2)" title="Purge File">&times;</button>
-        </td>
-      </tr>
+  if (currentVaultViewMode === 'table') {
+    let html = `
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 50px; text-align: center;">Type</th>
+              <th>File Name</th>
+              <th style="width: 120px;">File Size</th>
+              <th class="col-date" style="width: 130px;">Ingest Date</th>
+              <th>Metadata Tags</th>
+              <th style="width: 130px; text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="vault-table-body">
     `;
-  }).join('');
 
-  // Bind clicks
-  // 1. File name link clicking (opens modal)
-  tableBody.querySelectorAll('.vault-filename-link').forEach(link => {
+    html += docs.map(doc => {
+      const sizeString = formatBytes(doc.size);
+      const dateString = new Date(doc.uploadDate).toLocaleDateString();
+      let icon = getDocIcon(doc.type);
+
+      return `
+        <tr>
+          <td style="font-size: 1.25rem; text-align: center;">${icon}</td>
+          <td>
+            <span class="vault-filename-link" data-id="${doc.id}" style="font-weight: 700; color: var(--text-primary); cursor: pointer;" title="Open in themed viewer">
+              ${escapeHTML(doc.name)}
+            </span>
+          </td>
+          <td>${sizeString}</td>
+          <td class="monospace" style="font-size: 0.85rem;">${dateString}</td>
+          <td>
+            ${doc.tags.map(t => `<span class="tag">${escapeHTML(t)}</span>`).join(' ')}
+          </td>
+          <td style="text-align: right;">
+            <button class="btn btn-icon btn-view-file" data-id="${doc.id}" title="Open Viewer">👁</button>
+            <button class="btn btn-icon btn-delete-file" data-id="${doc.id}" style="color: var(--danger); border-color: rgba(239,68,68,0.2)" title="Purge File">&times;</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+    container.innerHTML = html;
+  } else {
+    // Render Grid/Compact/Minimal using .cards-grid
+    const viewClass = currentVaultViewMode === 'grid' ? '' : 'view-mode-' + currentVaultViewMode;
+    let html = `<div class="cards-grid ${viewClass}" style="margin-top: 0;">`;
+    
+    html += docs.map(doc => {
+      const sizeString = formatBytes(doc.size);
+      const dateString = new Date(doc.uploadDate).toLocaleDateString();
+      let icon = getDocIcon(doc.type);
+
+      return `
+        <div class="card">
+          <div class="card-thumbnail" style="display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); border-radius: 12px; font-size: 3rem; margin-bottom: 1rem; color: var(--accent);">
+            ${icon}
+          </div>
+          <div class="card-header">
+            <div class="card-title vault-filename-link" data-id="${doc.id}" style="cursor: pointer;" title="${escapeHTML(doc.name)}">${escapeHTML(doc.name)}</div>
+            <div class="card-actions">
+              <button class="btn btn-icon btn-view-file" data-id="${doc.id}" title="Open Viewer">👁</button>
+              <button class="btn btn-icon btn-delete-file" data-id="${doc.id}" style="color: var(--danger); border-color: rgba(239,68,68,0.2)" title="Purge File">&times;</button>
+            </div>
+          </div>
+          <div class="card-body" style="font-size: 0.8rem; display: flex; flex-direction: column; justify-content: space-between; flex: 1;">
+            <div style="color: var(--text-muted); margin-bottom: 0.5rem;">Size: ${sizeString}</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Ingested: ${dateString}</div>
+          </div>
+          <div class="card-footer" style="margin-top: 1rem;">
+            ${doc.tags.map(t => `<span class="tag">${escapeHTML(t)}</span>`).join(' ')}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    html += `</div>`;
+    container.innerHTML = html;
+  }
+
+  // Bind clicks dynamically inside container
+  container.querySelectorAll('.vault-filename-link').forEach(link => {
     link.addEventListener('click', () => {
       openPDFViewer(link.getAttribute('data-id'));
     });
   });
 
-  // 2. Eye icon clicking (opens modal)
-  tableBody.querySelectorAll('.btn-view-file').forEach(btn => {
+  container.querySelectorAll('.btn-view-file').forEach(btn => {
     btn.addEventListener('click', () => {
       openPDFViewer(btn.getAttribute('data-id'));
     });
   });
 
-  // 3. Purge button
-  tableBody.querySelectorAll('.btn-delete-file').forEach(btn => {
+  container.querySelectorAll('.btn-delete-file').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
-      const doc = getDocuments().find(d => d.id === id);
-      if (doc) {
-        showDialog(`Are you sure you want to delete file: "${doc.name}"?`, () => {
-          deleteDocument(id);
-          writeTerminal(`Deleted file: "${doc.name}"`, 'WARN');
-        });
-      }
+      showDialog('Are you sure you want to permanently delete this document?', () => {
+        deleteDocument(id);
+        writeTerminal('Deleted document from indexed vault', 'WARN');
+      });
     });
   });
 }

@@ -10,6 +10,7 @@ let storeUnsubscribe = null;
 let containerRef = null;
 let activeTagFilter = 'ALL';
 let editingBookmarkId = null;
+let currentViewMode = localStorage.getItem('myloom_library_view') || 'grid';
 
 export const LibraryView = {
   render(container) {
@@ -25,6 +26,12 @@ export const LibraryView = {
       <div class="toolbar">
         <div class="actions-group" style="flex: 1;">
           <input type="text" id="library-search" class="form-control search-input" placeholder="Search titles or URLs...">
+        </div>
+        <div class="actions-group view-toggles" style="background: rgba(0,0,0,0.2); padding: 0.2rem; border-radius: 8px; border: 1px solid var(--border-color);">
+          <button class="btn btn-icon view-toggle-btn ${currentViewMode === 'grid' ? 'active' : ''}" data-view="grid" title="Grid View" style="padding: 0.3rem 0.5rem; border-radius: 6px;">⊞</button>
+          <button class="btn btn-icon view-toggle-btn ${currentViewMode === 'compact' ? 'active' : ''}" data-view="compact" title="Compact Grid" style="padding: 0.3rem 0.5rem; border-radius: 6px;">⊟</button>
+          <button class="btn btn-icon view-toggle-btn ${currentViewMode === 'list' ? 'active' : ''}" data-view="list" title="List View" style="padding: 0.3rem 0.5rem; border-radius: 6px;">☰</button>
+          <button class="btn btn-icon view-toggle-btn ${currentViewMode === 'minimal' ? 'active' : ''}" data-view="minimal" title="Minimal List" style="padding: 0.3rem 0.5rem; border-radius: 6px;">≡</button>
         </div>
         <div class="actions-group" style="margin-left: auto;">
           <button class="btn" id="btn-manage-link-categories" title="Create a link category">+ Category</button>
@@ -204,6 +211,19 @@ function bindEvents() {
     if (e.target.matches('#add-bookmark-overlay')) {
       e.target.classList.remove('active');
       document.getElementById('add-bookmark-form').reset();
+      return;
+    }
+
+    // View toggle handler
+    const viewBtn = e.target.closest('.view-toggle-btn');
+    if (viewBtn) {
+      const mode = viewBtn.getAttribute('data-view');
+      currentViewMode = mode;
+      localStorage.setItem('myloom_library_view', mode);
+      document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('active'));
+      viewBtn.classList.add('active');
+      const searchInput = document.getElementById('library-search');
+      renderBookmarksList(searchInput ? searchInput.value : '', activeTagFilter);
       return;
     }
 
@@ -420,7 +440,7 @@ function renderBookmarksList(searchQuery = '', filterTag = 'ALL') {
             <button class="btn btn-icon btn-delete-cat" data-cat="${escapeHTML(category)}" style="font-size: 0.9rem; color: var(--text-secondary);" title="Delete Category">🗑️</button>
           </div>
         </h2>
-        <div class="cards-grid" style="margin-top: 0;">
+        <div class="cards-grid ${currentViewMode !== 'grid' ? 'view-mode-' + currentViewMode : ''}" style="margin-top: 0;">
           ${catBookmarks.length === 0 ? '<div style="grid-column: 1 / -1; color: var(--text-muted); font-size: 0.9rem; padding: 1rem 0;">No links in this category.</div>' : ''}
           ${catBookmarks.map(b => {
             let domain = 'unknown';
