@@ -566,19 +566,27 @@ function getLinkThumbnailHTML(url) {
       } else if (urlObj.hostname.includes('youtu.be')) {
         ytId = urlObj.pathname.split('/')[1];
       }
-    }
-    
     if (isYouTube && ytId) {
+      // 1. YouTube Video: Direct HD fetch
       return `
         <div class="link-thumbnail-container">
           <img class="link-thumbnail-img" src="https://img.youtube.com/vi/${ytId}/maxresdefault.jpg" alt="YouTube Thumbnail" onerror="this.onerror=null; this.src='https://img.youtube.com/vi/${ytId}/hqdefault.jpg';">
         </div>
       `;
+    } else if (isYouTube && !ytId) {
+      // 2. YouTube Playlist/Channel: 11ty OpenGraph scrape
+      const encodedUrl = encodeURIComponent(url);
+      return `
+        <div class="link-thumbnail-container">
+          <img class="link-thumbnail-img" src="https://v1.opengraph.11ty.dev/${encodedUrl}/medium/" alt="Playlist Thumbnail">
+        </div>
+      `;
     } else {
+      // 3. Generic Links: Clearbit Logo -> Icon.Horse Logo -> Google Favicon
       const domain = urlObj.hostname;
       return `
         <div class="link-thumbnail-container" style="background-color: #111;">
-          <img class="link-logo-img" src="https://icon.horse/icon/${domain}" alt="Logo">
+          <img class="link-logo-img" src="https://logo.clearbit.com/${domain}" alt="Logo" onerror="this.onerror=null; this.src='https://icon.horse/icon/${domain}';">
         </div>
       `;
     }
