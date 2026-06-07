@@ -149,47 +149,6 @@ function bindEvents() {
     }
   });
 
-  // HTML5 Drag and Drop for Categories
-  document.body.addEventListener('dragstart', (e) => {
-    const handle = e.target.closest('.drag-handle');
-    if (handle) {
-      draggedCategory = handle.closest('.category-section');
-      e.dataTransfer.effectAllowed = 'move';
-      draggedCategory.style.opacity = '0.4';
-    }
-  });
-
-  document.body.addEventListener('dragover', (e) => {
-    if (!draggedCategory) return;
-    e.preventDefault(); // allow drop
-    e.dataTransfer.dropEffect = 'move';
-    const targetSection = e.target.closest('.category-section');
-    if (targetSection && targetSection !== draggedCategory) {
-      const rect = targetSection.getBoundingClientRect();
-      const middleY = rect.top + rect.height / 2;
-      if (e.clientY < middleY) {
-        targetSection.parentNode.insertBefore(draggedCategory, targetSection);
-      } else {
-        targetSection.parentNode.insertBefore(draggedCategory, targetSection.nextSibling);
-      }
-    }
-  });
-
-  document.body.addEventListener('dragend', (e) => {
-    if (draggedCategory) {
-      draggedCategory.style.opacity = '1';
-      draggedCategory = null;
-      // Save new order
-      const newOrder = [];
-      document.querySelectorAll('.category-section').forEach(sec => {
-        const cat = sec.getAttribute('data-category');
-        if (cat) newOrder.push(cat);
-      });
-      localStorage.setItem('myloom_category_order', JSON.stringify(newOrder));
-      categoryOrder = newOrder;
-    }
-  });
-
   document.body.addEventListener('submit', async (e) => {
     if (e.target.matches('#add-bookmark-form')) {
       e.preventDefault();
@@ -525,7 +484,7 @@ function renderBookmarksList(searchQuery = '', filterTag = 'ALL') {
             <span>${escapeHTML(category)}</span>
           </div>
           <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <div class="drag-handle" draggable="true" style="cursor: grab; font-size: 1.2rem; color: var(--text-muted); padding: 0 0.5rem;" title="Drag to reorder">⋮⋮</div>
+            <div class="drag-handle" style="cursor: grab; font-size: 1.2rem; color: var(--text-muted); padding: 0 0.5rem; touch-action: none;" title="Drag to reorder">⋮⋮</div>
             <button class="btn btn-icon btn-edit-cat" data-cat="${escapeHTML(category)}" style="font-size: 0.9rem; color: var(--text-secondary);" title="Rename Category">✎</button>
             <button class="btn btn-icon btn-delete-cat" data-cat="${escapeHTML(category)}" style="font-size: 0.9rem; color: var(--text-secondary);" title="Delete Category">🗑️</button>
           </div>
@@ -574,6 +533,22 @@ function renderBookmarksList(searchQuery = '', filterTag = 'ALL') {
   }
 
   cardsContainer.innerHTML = html;
+  
+  if (window.Sortable) {
+    new Sortable(cardsContainer, {
+      handle: '.drag-handle',
+      animation: 150,
+      onEnd: function () {
+        const newOrder = [];
+        document.querySelectorAll('.category-section').forEach(sec => {
+          const cat = sec.getAttribute('data-category');
+          if (cat) newOrder.push(cat);
+        });
+        localStorage.setItem('myloom_category_order', JSON.stringify(newOrder));
+        categoryOrder = newOrder;
+      }
+    });
+  }
 }
 
 function getLinkThumbnailHTML(url) {
