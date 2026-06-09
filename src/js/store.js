@@ -139,69 +139,44 @@ async function syncBookmarkCategoriesFromDatabase() {
 }
 
 // -------------------------------------------------------------
-// INDEXEDDB BLOB STORAGE (Local document blobs)
+// SUPABASE CLOUD BLOB STORAGE (Cross-device file sync)
 // -------------------------------------------------------------
-const IDB_NAME = 'loom_blobs_db';
-const IDB_VERSION = 1;
-const IDB_STORE = 'blobs';
 
-function getDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(IDB_NAME, IDB_VERSION);
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(IDB_STORE)) {
-        db.createObjectStore(IDB_STORE);
-      }
-    };
-    request.onsuccess = (e) => resolve(e.target.result);
-    request.onerror = (e) => reject(e.target.error);
-  });
-}
-
-export async function storeFileBlob(id, blob) {
+export async function storeFileBlob(id, file) {
   try {
-    const db = await getDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE, 'readwrite');
-      const store = tx.objectStore(IDB_STORE);
-      const request = store.put(blob, id);
-      request.onsuccess = () => resolve();
-      request.onerror = (e) => reject(e.target.error);
-    });
+    const { error } = await supabase.storage
+      .from('vault')
+      .upload(id, file, { upsert: true });
+    
+    if (error) throw error;
   } catch (err) {
-    console.error('IndexedDB Put Error:', err);
+    console.error('Supabase Storage Upload Error:', err);
   }
 }
 
 export async function getFileBlob(id) {
   try {
-    const db = await getDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE, 'readonly');
-      const store = tx.objectStore(IDB_STORE);
-      const request = store.get(id);
-      request.onsuccess = (e) => resolve(e.target.result);
-      request.onerror = (e) => reject(e.target.error);
-    });
+    const { data, error } = await supabase.storage
+      .from('vault')
+      .download(id);
+      
+    if (error) throw error;
+    return data;
   } catch (err) {
-    console.error('IndexedDB Get Error:', err);
+    console.error('Supabase Storage Download Error:', err);
     return null;
   }
 }
 
 export async function deleteFileBlob(id) {
   try {
-    const db = await getDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(IDB_STORE, 'readwrite');
-      const store = tx.objectStore(IDB_STORE);
-      const request = store.delete(id);
-      request.onsuccess = () => resolve();
-      request.onerror = (e) => reject(e.target.error);
-    });
+    const { error } = await supabase.storage
+      .from('vault')
+      .remove([id]);
+      
+    if (error) throw error;
   } catch (err) {
-    console.error('IndexedDB Delete Error:', err);
+    console.error('Supabase Storage Delete Error:', err);
   }
 }
 

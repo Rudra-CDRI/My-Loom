@@ -652,7 +652,12 @@ async function openPDFViewer(docId) {
   
   if (!pdfOverlay || !iframe) return;
 
-  // Retrieve blob binary payload from IndexedDB
+  // Display overlay modal immediately with loading state
+  pdfOverlay.classList.add('active');
+  pdfTitle.textContent = `[Downloading from Cloud...]`;
+  iframe.src = 'about:blank'; // Clear previous
+
+  // Retrieve blob binary payload from Supabase Cloud Storage
   const blob = await getFileBlob(docId);
   let fileBlob = blob;
 
@@ -703,8 +708,6 @@ async function openPDFViewer(docId) {
     writeTerminal(`Downloaded/opened document on device: ${doc.name}`, 'SYS');
   };
 
-  // Display overlay modal
-  pdfOverlay.classList.add('active');
 }
 
 // Helpers
