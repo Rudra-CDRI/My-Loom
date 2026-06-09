@@ -168,6 +168,11 @@ export async function getFileBlob(id) {
   }
 }
 
+export function getFileUrl(id) {
+  const { data } = supabase.storage.from('vault').getPublicUrl(id);
+  return data.publicUrl;
+}
+
 export async function deleteFileBlob(id) {
   try {
     const { error } = await supabase.storage

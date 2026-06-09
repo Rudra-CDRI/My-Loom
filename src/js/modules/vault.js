@@ -2,7 +2,7 @@
    MY LOOM // DOCUMENT VAULT VIEW MODULE
    ------------------------------------------------------------- */
 
-import { getDocuments, addDocument, deleteDocument, storeFileBlob, getFileBlob, subscribe, getFolders, addFolder, updateFolder, deleteFolder, getDocumentsByFolder } from '../store.js';
+import { getDocuments, addDocument, deleteDocument, storeFileBlob, getFileBlob, getFileUrl, subscribe, getFolders, addFolder, updateFolder, deleteFolder, getDocumentsByFolder } from '../store.js';
 import { writeTerminal } from '../app.js';
 import { showDialog, showPrompt } from '../components/dialog.js';
 
@@ -652,18 +652,16 @@ async function openPDFViewer(docId) {
   
   if (!pdfOverlay || !iframe) return;
 
-  // Display overlay modal immediately with loading state
+  // Set loading state
   pdfOverlay.classList.add('active');
-  pdfTitle.textContent = `[Downloading from Cloud...]`;
-  iframe.src = 'about:blank'; // Clear previous
+  pdfTitle.textContent = `[Loading...]`;
+  iframe.src = 'about:blank';
 
-  // Retrieve blob binary payload from Supabase Cloud Storage
-  const blob = await getFileBlob(docId);
-  let fileBlob = blob;
+  revokeActiveUrl();
 
-  // If no blob is found (seeded mock files), generate placeholder sheet
-  if (!fileBlob) {
-    fileBlob = new Blob([
+  if (!doc.hasRealBlob) {
+    // Mock seeded file
+    const fileBlob = new Blob([
       `MY LOOM SECURE DOCUMENT DECRYPTION SHEET\n========================================\n\n` +
       `File Title:  ${doc.name}\n` +
       `File Size:   ${formatBytes(doc.size)}\n` +
@@ -674,16 +672,24 @@ async function openPDFViewer(docId) {
       `STATUS: Placeholder Decryption Successful.\n\n` +
       `This is a pre-seeded placeholder document. Real files uploaded via drag-and-drop will render completely (PDFs, images, or code sheets) inside this viewer.`
     ], { type: 'text/plain;charset=utf-8' });
+    activeObjectUrl = URL.createObjectURL(fileBlob);
+    iframe.src = activeObjectUrl;
+  } else {
+    // Real cloud file
+    let fileUrl = getFileUrl(docId);
+    
+    // For PDFs on mobile, use Google Docs Viewer to render inside iframe
+    if (doc.type === 'pdf') {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        fileUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+      }
+    }
+    
+    activeObjectUrl = fileUrl; // Ensure open/download buttons use the direct URL
+    iframe.src = fileUrl;
   }
-
-  // Revoke previous URL to prevent memory leaks
-  revokeActiveUrl();
-
-  // Create new local URL pointer
-  activeObjectUrl = URL.createObjectURL(fileBlob);
   
-  // Set iframe source
-  iframe.src = activeObjectUrl;
   pdfTitle.textContent = `[Viewing: ${doc.name}]`;
 
   // Bind Open in New Tab action
